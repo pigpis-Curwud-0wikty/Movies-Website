@@ -14,8 +14,8 @@ const LoginPage = () => {
   return (
     <div className="h-screen w-full hero-bg">
       <header className="max-w-6xl mx-auto flex justify-center items-center p-4">
-        <Link to={"/"}>
-          <img src="/netflix-logo.png" alt="Logo" className="w-52" />
+        <Link to="/">
+          <h1 className="text-red-700 font-bold text-4xl">EGYBEST</h1>
         </Link>
       </header>
       <div className="flex justify-center items-center mt-20 mx-3">
