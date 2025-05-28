@@ -3,7 +3,9 @@ const { ENV_VARS } = require("./envVars");
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(ENV_VARS.MONGOS_URL);
+    const conn = await mongoose.connect(
+      "mongodb+srv://ziadmohamed123:0QXmG4L1hx9J3WqE@cluster0.kel3mly.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    );
     console.log("MonogDB connected: " + conn.connection.host);
   } catch (error) {
     console.error("Error Connection to MongoDB: " + error.message);
@@ -11,4 +13,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports =  {connectDB};
+module.exports = { connectDB };
