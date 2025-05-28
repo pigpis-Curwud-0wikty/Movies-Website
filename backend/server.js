@@ -21,6 +21,14 @@ app.use("/api/v1/movie", protectRoute, MovieRoutes);
 app.use("/api/v1/tv", protectRoute, TVRoutes);
 app.use("/api/v1/search", protectRoute, SearchRoutes);
 
+// To Deploy
+app.get("/", (req, res) => {
+  res.send({
+    activeStatus: true,
+    error: false,
+  });
+});
+
 // console.log("Loaded JWT_SECRET:", process.env.JWT_SECRET);
 // console.log("Loaded NODE_ENV:", process.env.NODE_ENV);
 
