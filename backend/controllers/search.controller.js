@@ -26,7 +26,6 @@ async function searchPerson(req, res) {
 
     res.status(200).json({ success: true, content: response.results });
   } catch (error) {
-    console.log("Error in searchPerson controller: ", error.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
@@ -55,7 +54,6 @@ async function searchMovie(req, res) {
 
     res.status(200).json({ success: true, content: response.results });
   } catch (error) {
-    console.log("Error in searchPerson controller: ", error.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
@@ -84,7 +82,6 @@ async function searchTv(req, res) {
 
     res.status(200).json({ success: true, content: response.results });
   } catch (error) {
-    console.log("Error in searchPerson controller: ", error.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }
@@ -111,7 +108,6 @@ async function deleteItemFromSearchHistory(req, res) {
       .status(200)
       .json({ success: true, meassage: "Item Removed From Search History" });
   } catch (error) {
-    console.log("Error in Remove History controller: ", error.message);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 }

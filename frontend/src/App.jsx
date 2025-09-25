@@ -13,7 +13,6 @@ import { Loader } from "lucide-react";
 
 const App = () => {
   const { user, isAuthCheck, authcheck } = useAuthStore();
-  console.log("The Auth User is :", user);
 
   useEffect(() => {
     authcheck();
