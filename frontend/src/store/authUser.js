@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 
