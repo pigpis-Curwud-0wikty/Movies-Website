@@ -22,9 +22,13 @@ app.use("/api/v1/movie", protectRoute, MovieRoutes);
 app.use("/api/v1/tv", protectRoute, TVRoutes);
 app.use("/api/v1/search", protectRoute, SearchRoutes);
 
+app.get("/", (req, res) => {
+  res.send("Welcome to MovieBuff API");
+});
+
 app.listen(PORT, () => {
   connectDB();
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`http://localhost:${PORT}`);
 });
 
 // TMBD API
