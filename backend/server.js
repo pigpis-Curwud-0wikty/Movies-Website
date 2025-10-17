@@ -15,20 +15,26 @@ const app = express();
 const PORT = ENV_VARS.PORT;
 
 app.use(express.json()); // will allow us to parse req.body
+app.use(cors());
 app.use(cookieParser());
+
+// initialize DB connection on cold start (useful for serverless)
+connectDB();
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/movie", protectRoute, MovieRoutes);
 app.use("/api/v1/tv", protectRoute, TVRoutes);
 app.use("/api/v1/search", protectRoute, SearchRoutes);
 
+
 app.get("/", (req, res) => {
-  res.send("Welcome to MovieBuff API");
+  res.send("Netflix Clone API is running");
 });
 
-app.listen(PORT, () => {
-  connectDB();
-  console.log(`http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`http://localhost:${PORT}`);
+  });
+}
 
-// TMBD API
+module.exports = app;
