@@ -79,29 +79,37 @@ async function signup(req, res) {
 
 async function login(req, res) {
   try {
+    console.log("Login attempt:", { body: req.body, headers: req.headers });
+    
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.log("Missing fields:", { email: !!email, password: !!password });
       return res
         .status(400)
         .json({ success: false, message: "All fields are required" });
     }
 
+    console.log("Looking for user with email:", email);
     const user = await User.findOne({ email: email });
     if (!user) {
+      console.log("User not found for email:", email);
       return res
         .status(404)
         .json({ success: false, message: "Invalid credentials" });
     }
 
+    console.log("User found, checking password");
     const isPasswordCorrect = await bcryptjs.compare(password, user.password);
 
     if (!isPasswordCorrect) {
+      console.log("Password incorrect for user:", email);
       return res
         .status(400)
         .json({ success: false, message: "Invalid credentials" });
     }
 
+    console.log("Login successful for user:", email);
     generateTokenAndSetCookie(user._id, res);
 
     res.status(200).json({
@@ -112,6 +120,7 @@ async function login(req, res) {
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 }

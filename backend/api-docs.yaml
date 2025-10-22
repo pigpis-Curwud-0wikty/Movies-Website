@@ -1,0 +1,1344 @@
+openapi: 3.0.3
+info:
+  title: Netflix Clone API
+  description: |
+    A comprehensive API for a Netflix clone application that provides movie and TV show data,
+    user authentication, and search functionality. The API integrates with The Movie Database (TMDB)
+    to fetch trending content, trailers, details, and similar content.
+  version: 1.0.0
+  contact:
+    name: Netflix Clone API Support
+    email: support@netflixclone.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://movies-website-brown.vercel.app
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Movies
+    description: Movie-related operations
+  - name: TV Shows
+    description: TV show-related operations
+  - name: Search
+    description: Search functionality for movies, TV shows, and people
+  - name: General
+    description: General API information
+
+paths:
+  /:
+    get:
+      tags:
+        - General
+      summary: API Health Check
+      description: Returns a simple message indicating the API is running
+      responses:
+        '200':
+          description: API is running
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "Netflix Clone API is running"
+
+  /api/v1/auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: User Registration
+      description: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - username
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "password123"
+                username:
+                  type: string
+                  example: "johndoe"
+            examples:
+              valid_signup:
+                summary: Valid signup
+                value:
+                  email: "john@example.com"
+                  password: "password123"
+                  username: "johndoe"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_fields:
+                  summary: Missing required fields
+                  value:
+                    success: false
+                    message: "All fields are required"
+                invalid_email:
+                  summary: Invalid email format
+                  value:
+                    success: false
+                    message: "Invalid email format"
+                short_password:
+                  summary: Password too short
+                  value:
+                    success: false
+                    message: "Password must be at least 6 characters long"
+                email_exists:
+                  summary: Email already exists
+                  value:
+                    success: false
+                    message: "Email already exists"
+                username_exists:
+                  summary: Username already exists
+                  value:
+                    success: false
+                    message: "Username already exists"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User Login
+      description: Authenticate user and return user data with JWT cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "password123"
+            examples:
+              valid_login:
+                summary: Valid login
+                value:
+                  email: "john@example.com"
+                  password: "password123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+          headers:
+            Set-Cookie:
+              description: JWT token cookie
+              schema:
+                type: string
+                example: "jwt-netflix=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_fields:
+                  summary: Missing fields
+                  value:
+                    success: false
+                    message: "All fields are required"
+                invalid_credentials:
+                  summary: Invalid credentials
+                  value:
+                    success: false
+                    message: "Invalid credentials"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Invalid credentials"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User Logout
+      description: Logout user and clear JWT cookie
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logged out successfuly"
+
+  /api/v1/auth/authcheck:
+    get:
+      tags:
+        - Authentication
+      summary: Authentication Check
+      description: Verify if user is authenticated and return user data
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User is authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                message: "Unauthorized"
+
+  /api/v1/movie/trending:
+    get:
+      tags:
+        - Movies
+      summary: Get Trending Movies
+      description: Fetch trending movies from TMDB
+      responses:
+        '200':
+          description: Trending movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    $ref: '#/components/schemas/Movie'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/movie/{id}/trailers:
+    get:
+      tags:
+        - Movies
+      summary: Get Movie Trailers
+      description: Fetch trailers for a specific movie
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Movie ID
+          schema:
+            type: integer
+            example: 550
+      responses:
+        '200':
+          description: Movie trailers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Trailer'
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                type: null
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/movie/{id}/details:
+    get:
+      tags:
+        - Movies
+      summary: Get Movie Details
+      description: Fetch detailed information about a specific movie
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Movie ID
+          schema:
+            type: integer
+            example: 550
+      responses:
+        '200':
+          description: Movie details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    $ref: '#/components/schemas/MovieDetails'
+        '404':
+          description: Movie not found
+          content:
+            application/json:
+              schema:
+                type: null
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/movie/{id}/similar:
+    get:
+      tags:
+        - Movies
+      summary: Get Similar Movies
+      description: Fetch movies similar to the specified movie
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Movie ID
+          schema:
+            type: integer
+            example: 550
+      responses:
+        '200':
+          description: Similar movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Movie'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/movie/{category}:
+    get:
+      tags:
+        - Movies
+      summary: Get Movies by Category
+      description: Fetch movies by specific category (e.g., popular, top_rated, now_playing, upcoming)
+      parameters:
+        - name: category
+          in: path
+          required: true
+          description: Movie category
+          schema:
+            type: string
+            enum: [popular, top_rated, now_playing, upcoming]
+            example: popular
+      responses:
+        '200':
+          description: Movies retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Movie'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tv/trending:
+    get:
+      tags:
+        - TV Shows
+      summary: Get Trending TV Shows
+      description: Fetch trending TV shows from TMDB
+      responses:
+        '200':
+          description: Trending TV shows retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    $ref: '#/components/schemas/TVShow'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tv/{id}/trailers:
+    get:
+      tags:
+        - TV Shows
+      summary: Get TV Show Trailers
+      description: Fetch trailers for a specific TV show
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: TV Show ID
+          schema:
+            type: integer
+            example: 1399
+      responses:
+        '200':
+          description: TV show trailers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Trailer'
+        '404':
+          description: TV show not found
+          content:
+            application/json:
+              schema:
+                type: null
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tv/{id}/details:
+    get:
+      tags:
+        - TV Shows
+      summary: Get TV Show Details
+      description: Fetch detailed information about a specific TV show
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: TV Show ID
+          schema:
+            type: integer
+            example: 1399
+      responses:
+        '200':
+          description: TV show details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    $ref: '#/components/schemas/TVShowDetails'
+        '404':
+          description: TV show not found
+          content:
+            application/json:
+              schema:
+                type: null
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tv/{id}/similar:
+    get:
+      tags:
+        - TV Shows
+      summary: Get Similar TV Shows
+      description: Fetch TV shows similar to the specified TV show
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: TV Show ID
+          schema:
+            type: integer
+            example: 1399
+      responses:
+        '200':
+          description: Similar TV shows retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TVShow'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/tv/{category}:
+    get:
+      tags:
+        - TV Shows
+      summary: Get TV Shows by Category
+      description: Fetch TV shows by specific category (e.g., popular, top_rated, on_the_air, airing_today)
+      parameters:
+        - name: category
+          in: path
+          required: true
+          description: TV Show category
+          schema:
+            type: string
+            enum: [popular, top_rated, on_the_air, airing_today]
+            example: popular
+      responses:
+        '200':
+          description: TV shows retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TVShow'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/search/movie/{query}:
+    get:
+      tags:
+        - Search
+      summary: Search Movies
+      description: Search for movies by query string
+      parameters:
+        - name: query
+          in: path
+          required: true
+          description: Search query
+          schema:
+            type: string
+            example: "avengers"
+      responses:
+        '200':
+          description: Movie search results retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Movie'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/search/tv/{query}:
+    get:
+      tags:
+        - Search
+      summary: Search TV Shows
+      description: Search for TV shows by query string
+      parameters:
+        - name: query
+          in: path
+          required: true
+          description: Search query
+          schema:
+            type: string
+            example: "game of thrones"
+      responses:
+        '200':
+          description: TV show search results retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TVShow'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/search/person/{query}:
+    get:
+      tags:
+        - Search
+      summary: Search People
+      description: Search for people (actors, directors, etc.) by query string
+      parameters:
+        - name: query
+          in: path
+          required: true
+          description: Search query
+          schema:
+            type: string
+            example: "tom hanks"
+      responses:
+        '200':
+          description: People search results retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Person'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/search/history:
+    get:
+      tags:
+        - Search
+      summary: Get Search History
+      description: Retrieve user's search history
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Search history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SearchHistoryItem'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/search/history/{id}:
+    delete:
+      tags:
+        - Search
+      summary: Delete Search History Item
+      description: Delete a specific item from user's search history
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Search history item ID
+          schema:
+            type: string
+            example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Search history item deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Search history item deleted successfully"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Search history item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt-netflix
+      description: JWT token stored in HTTP-only cookie
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        username:
+          type: string
+          example: "johndoe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        password:
+          type: string
+          example: ""
+          description: "Empty string in responses for security"
+        image:
+          type: string
+          example: "/avatar1.png"
+        searchHistory:
+          type: array
+          items:
+            type: string
+          example: []
+        __v:
+          type: integer
+          example: 0
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error message"
+
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 550
+        title:
+          type: string
+          example: "Fight Club"
+        overview:
+          type: string
+          example: "A ticking-time-bomb insomniac and a slippery soap salesman..."
+        release_date:
+          type: string
+          format: date
+          example: "1999-10-15"
+        adult:
+          type: boolean
+          example: false
+        backdrop_path:
+          type: string
+          example: "/87hTDiay2N2qWyX4D7vNgqNzgUC.jpg"
+        poster_path:
+          type: string
+          example: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"
+        vote_average:
+          type: number
+          format: float
+          example: 8.433
+        vote_count:
+          type: integer
+          example: 26280
+        genre_ids:
+          type: array
+          items:
+            type: integer
+          example: [18]
+
+    TVShow:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1399
+        name:
+          type: string
+          example: "Game of Thrones"
+        overview:
+          type: string
+          example: "Seven noble families fight for control of the mythical land..."
+        first_air_date:
+          type: string
+          format: date
+          example: "2011-04-17"
+        adult:
+          type: boolean
+          example: false
+        backdrop_path:
+          type: string
+          example: "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg"
+        poster_path:
+          type: string
+          example: "/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg"
+        vote_average:
+          type: number
+          format: float
+          example: 8.441
+        vote_count:
+          type: integer
+          example: 21025
+        genre_ids:
+          type: array
+          items:
+            type: integer
+          example: [18, 10759, 10765]
+
+    MovieDetails:
+      allOf:
+        - $ref: '#/components/schemas/Movie'
+        - type: object
+          properties:
+            budget:
+              type: integer
+              example: 63000000
+            genres:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 18
+                  name:
+                    type: string
+                    example: "Drama"
+            homepage:
+              type: string
+              example: "http://www.foxmovies.com/movies/fight-club"
+            imdb_id:
+              type: string
+              example: "tt0137523"
+            production_companies:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 508
+                  name:
+                    type: string
+                    example: "Regency Enterprises"
+                  logo_path:
+                    type: string
+                    example: "/7cxRWzi4LsVm4Utfpr1hfARNurT.png"
+                  origin_country:
+                    type: string
+                    example: "US"
+            production_countries:
+              type: array
+              items:
+                type: object
+                properties:
+                  iso_3166_1:
+                    type: string
+                    example: "US"
+                  name:
+                    type: string
+                    example: "United States of America"
+            revenue:
+              type: integer
+              example: 100853753
+            runtime:
+              type: integer
+              example: 139
+            spoken_languages:
+              type: array
+              items:
+                type: object
+                properties:
+                  english_name:
+                    type: string
+                    example: "English"
+                  iso_639_1:
+                    type: string
+                    example: "en"
+                  name:
+                    type: string
+                    example: "English"
+            status:
+              type: string
+              example: "Released"
+            tagline:
+              type: string
+              example: "Mischief. Mayhem. Soap."
+
+    TVShowDetails:
+      allOf:
+        - $ref: '#/components/schemas/TVShow'
+        - type: object
+          properties:
+            created_by:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 9813
+                  name:
+                    type: string
+                    example: "David Benioff"
+                  gender:
+                    type: integer
+                    example: 2
+                  profile_path:
+                    type: string
+                    example: "/xvNN5huL0X8yJ7hCWIAPwuF1fDi.jpg"
+            episode_run_time:
+              type: array
+              items:
+                type: integer
+              example: [60]
+            genres:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 18
+                  name:
+                    type: string
+                    example: "Drama"
+            homepage:
+              type: string
+              example: "http://www.hbo.com/game-of-thrones"
+            in_production:
+              type: boolean
+              example: false
+            languages:
+              type: array
+              items:
+                type: string
+              example: ["en"]
+            last_air_date:
+              type: string
+              format: date
+              example: "2019-05-19"
+            last_episode_to_air:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1551830
+                name:
+                  type: string
+                  example: "The Iron Throne"
+                overview:
+                  type: string
+                  example: "In the aftermath of the devastating attack..."
+                vote_average:
+                  type: number
+                  format: float
+                  example: 4.8
+                vote_count:
+                  type: integer
+                  example: 106
+                air_date:
+                  type: string
+                  format: date
+                  example: "2019-05-19"
+                episode_number:
+                  type: integer
+                  example: 6
+                production_code:
+                  type: string
+                  example: "806"
+                season_number:
+                  type: integer
+                  example: 8
+                show_id:
+                  type: integer
+                  example: 1399
+                still_path:
+                  type: string
+                  example: "/3x8tJon5jXFa1ziAM93hPKNyW7i.jpg"
+            next_episode_to_air:
+              type: null
+              example: null
+            number_of_episodes:
+              type: integer
+              example: 73
+            number_of_seasons:
+              type: integer
+              example: 8
+            origin_country:
+              type: array
+              items:
+                type: string
+              example: ["US"]
+            original_language:
+              type: string
+              example: "en"
+            original_name:
+              type: string
+              example: "Game of Thrones"
+            production_companies:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 76043
+                  name:
+                    type: string
+                    example: "Revolution Sun Studios"
+                  logo_path:
+                    type: string
+                    example: "/9RO2vbQ67otPrBLXCaC8UMp3Qat.png"
+                  origin_country:
+                    type: string
+                    example: "US"
+            production_countries:
+              type: array
+              items:
+                type: object
+                properties:
+                  iso_3166_1:
+                    type: string
+                    example: "US"
+                  name:
+                    type: string
+                    example: "United States of America"
+            seasons:
+              type: array
+              items:
+                type: object
+                properties:
+                  air_date:
+                    type: string
+                    format: date
+                    example: "2010-12-05"
+                  episode_count:
+                    type: integer
+                    example: 10
+                  id:
+                    type: integer
+                    example: 3627
+                  name:
+                    type: string
+                    example: "Season 1"
+                  overview:
+                    type: string
+                    example: "Trouble is brewing in the Seven Kingdoms..."
+                  poster_path:
+                    type: string
+                    example: "/zwaj4DxJkGdKj8mC6tU7fLh6ZgB.jpg"
+                  season_number:
+                    type: integer
+                    example: 1
+            status:
+              type: string
+              example: "Ended"
+            tagline:
+              type: string
+              example: "Winter Is Coming"
+            type:
+              type: string
+              example: "Scripted"
+
+    Trailer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "5e382d1b4ca676001453826d"
+        iso_639_1:
+          type: string
+          example: "en"
+        iso_3166_1:
+          type: string
+          example: "US"
+        key:
+          type: string
+          example: "SUXWAEX2jlg"
+        name:
+          type: string
+          example: "Official Trailer"
+        site:
+          type: string
+          example: "YouTube"
+        size:
+          type: integer
+          example: 1080
+        type:
+          type: string
+          example: "Trailer"
+        official:
+          type: boolean
+          example: true
+        published_at:
+          type: string
+          format: date-time
+          example: "2019-05-20T15:00:00.000Z"
+
+    Person:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 31
+        name:
+          type: string
+          example: "Tom Hanks"
+        adult:
+          type: boolean
+          example: false
+        gender:
+          type: integer
+          example: 2
+        known_for_department:
+          type: string
+          example: "Acting"
+        popularity:
+          type: number
+          format: float
+          example: 84.631
+        profile_path:
+          type: string
+          example: "/pQFoyx7rp09CJTAbjFgO7mXojzS.jpg"
+        known_for:
+          type: array
+          items:
+            type: object
+            properties:
+              adult:
+                type: boolean
+                example: false
+              backdrop_path:
+                type: string
+                example: "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg"
+              genre_ids:
+                type: array
+                items:
+                  type: integer
+                example: [18, 53]
+              id:
+                type: integer
+                example: 550
+              media_type:
+                type: string
+                example: "movie"
+              original_language:
+                type: string
+                example: "en"
+              original_title:
+                type: string
+                example: "Fight Club"
+              overview:
+                type: string
+                example: "A ticking-time-bomb insomniac..."
+              poster_path:
+                type: string
+                example: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"
+              release_date:
+                type: string
+                format: date
+                example: "1999-10-15"
+              title:
+                type: string
+                example: "Fight Club"
+              video:
+                type: boolean
+                example: false
+              vote_average:
+                type: number
+                format: float
+                example: 8.433
+              vote_count:
+                type: integer
+                example: 26280
+
+    SearchHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        title:
+          type: string
+          example: "Avengers"
+        image:
+          type: string
+          example: "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg"
+        searchType:
+          type: string
+          enum: [movie, tv, person]
+          example: "movie"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-10-15T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2023-10-15T10:30:00.000Z"
+
+externalDocs:
+  description: The Movie Database (TMDB) API Documentation
+  url: https://developers.themoviedb.org/3/getting-started/introduction

@@ -9,8 +9,9 @@ const LoginPage = () => {
 
   const handleSubmit = (eo) => {
     eo.preventDefault();
+    console.log({ email, password });
     login({ email, password });
-  };
+  }
   return (
     <div className="h-screen w-full hero-bg">
       <header className="max-w-6xl mx-auto flex justify-center items-center p-4">
@@ -64,7 +65,7 @@ const LoginPage = () => {
               className="w-full py-2 bg-red-600 text-white font-semibold rounded-md
               hover:bg-red-700"
             >
-              Sign Up
+              Sign In
             </button>
           </form>
           <div className="text-center text-gray-400">

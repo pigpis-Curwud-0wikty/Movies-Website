@@ -10,40 +10,47 @@ export const useAuthStore = create((set) => ({
   signup: async (credentials) => {
     set({ isSigningUp: true });
     try {
-      const response = await axios.post("/api/v1/auth/signup", credentials);
+      const response = await axios.post("/api/v1/auth/signup", credentials, {
+        withCredentials: true,
+      });
       set({ user: response.data.user, isSigningUp: false });
       toast.success("Account created successfully");
     } catch (error) {
-      toast.error(error.response.data.message || "Sign Up Failed");
+      toast.error(error.response?.data?.message || "Sign Up Failed");
       set({ isSigningUp: false, user: null });
     }
   },
+
   login: async (credentials) => {
     set({ isLoggedIn: true });
     try {
-      const response = await axios.post("/api/v1/auth/login", credentials);
+      const response = await axios.post("/api/v1/auth/login", credentials, {
+        withCredentials: true, // 👈 أضفها هنا
+      });
       set({ user: response.data.user, isLoggedIn: false });
       toast.success("User Logged In");
     } catch (error) {
       set({ user: null, isLoggedIn: false });
-      toast.error(error.response.data.message || "Logged In Failed");
+      toast.error(error.response?.data?.message || "Logged In Failed");
     }
   },
+
   logout: async () => {
     set({ isLoggedOut: true });
     try {
-      await axios.post("/api/v1/auth/logout");
+      await axios.post("/api/v1/auth/logout", {}, { withCredentials: true });
       set({ user: null, isLoggedOut: false });
       toast.success("Logged out Successfully");
     } catch (error) {
       set({ isLoggedOut: false });
-      toast.error(error.response.data.message || "Logout Failed");
+      toast.error(error.response?.data?.message || "Logout Failed");
     }
   },
+
   authcheck: async () => {
     set({ isAuthCheck: true });
     try {
-      const response = await axios.get("api/v1/auth/authcheck");
+      const response = await axios.get("/api/v1/auth/authcheck");
       set({ user: response.data.user, isAuthCheck: false });
     } catch (error) {
       set({ isAuthCheck: false, user: null });

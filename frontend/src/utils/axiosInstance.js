@@ -1,8 +1,11 @@
 import axios from "axios";
 
-const axiosInstance = axios.create({
-  baseURL: "https://movies-website-bice.vercel.app", // حط هنا لينك الباك إند بتاعك
-  withCredentials: true, // لو بتستخدم cookies / jwt
+const instance = axios.create({
+  baseURL: "",
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-export default axiosInstance;
+export default instance;
