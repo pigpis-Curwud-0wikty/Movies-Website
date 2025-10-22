@@ -16,8 +16,8 @@ info:
 servers:
   - url: http://localhost:5000
     description: Development server
-  - url: https://movies-website-brown.vercel.app
-    description: Production server
+  - url: https://movies-website-production.up.railway.app
+    description: Production server (Railway)
 
 tags:
   - name: Authentication
