@@ -61,11 +61,12 @@ async function signup(req, res) {
       image,
     });
 
-    generateTokenAndSetCookie(newUser._id, res);
+    const token = generateTokenAndSetCookie(newUser._id, res);
     await newUser.save();
 
     res.status(201).json({
       success: true,
+      token: token, // Return token in response body
       user: {
         ...newUser._doc,
         password: "",
@@ -110,10 +111,11 @@ async function login(req, res) {
     }
 
     console.log("Login successful for user:", email);
-    generateTokenAndSetCookie(user._id, res);
+    const token = generateTokenAndSetCookie(user._id, res);
 
     res.status(200).json({
       success: true,
+      token: token, // Return token in response body
       user: {
         ...user._doc,
         password: "",

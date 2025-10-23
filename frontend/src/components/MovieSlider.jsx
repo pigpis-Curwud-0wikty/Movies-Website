@@ -4,6 +4,7 @@ import axios from "../utils/axiosInstance";
 import { Link } from "react-router-dom";
 import { SMALL_IMG_BASE_URL } from "../utils/constants";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import ImageWithFallback from "./ImageWithFallback";
 
 const MovieSlider = ({ category }) => {
 	const { contentType } = useContentStore();
@@ -55,10 +56,11 @@ const MovieSlider = ({ category }) => {
 				{content.map((item) => (
 					<Link to={`/watch/${item.id}`} className='min-w-[250px] relative group' key={item.id}>
 						<div className='rounded-lg overflow-hidden'>
-							<img
+							<ImageWithFallback
 								src={SMALL_IMG_BASE_URL + item.backdrop_path}
 								alt='Movie image'
 								className='transition-transform duration-300 ease-in-out group-hover:scale-125'
+								fallbackSrc='https://via.placeholder.com/500x281/000000/FFFFFF?text=No+Image'
 							/>
 						</div>
 						<p className='mt-2 text-center'>{item.title || item.name}</p>

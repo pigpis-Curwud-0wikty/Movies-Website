@@ -4,6 +4,7 @@ import { create } from "zustand";
 
 export const useAuthStore = create((set) => ({
   user: null,
+  token: localStorage.getItem('token'), // Get token from localStorage
   isSigningUp: false,
   isAuthCheck: true,
   isLoggedIn: false,
@@ -13,11 +14,13 @@ export const useAuthStore = create((set) => ({
       const response = await axios.post("/api/v1/auth/signup", credentials, {
         withCredentials: true,
       });
-      set({ user: response.data.user, isSigningUp: false });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token); // Store token in localStorage
+      set({ user, token, isSigningUp: false });
       toast.success("Account created successfully");
     } catch (error) {
       toast.error(error.response?.data?.message || "Sign Up Failed");
-      set({ isSigningUp: false, user: null });
+      set({ isSigningUp: false, user: null, token: null });
     }
   },
 
@@ -30,13 +33,17 @@ export const useAuthStore = create((set) => ({
       });
       console.log("Login successful, response:", response.data);
       console.log("Response headers:", response.headers);
-      console.log("Cookies after login:", document.cookie);
-      set({ user: response.data.user, isLoggedIn: false });
+      
+      const { token, user } = response.data;
+      localStorage.setItem('token', token); // Store token in localStorage
+      console.log("Token stored in localStorage:", token);
+      
+      set({ user, token, isLoggedIn: false });
       toast.success("User Logged In");
     } catch (error) {
       console.error("Login failed:", error);
       console.error("Error response:", error.response?.data);
-      set({ user: null, isLoggedIn: false });
+      set({ user: null, token: null, isLoggedIn: false });
       toast.error(error.response?.data?.message || "Logged In Failed");
     }
   },
@@ -45,7 +52,8 @@ export const useAuthStore = create((set) => ({
     set({ isLoggedOut: true });
     try {
       await axios.post("/api/v1/auth/logout", {}, { withCredentials: true });
-      set({ user: null, isLoggedOut: false });
+      localStorage.removeItem('token'); // Remove token from localStorage
+      set({ user: null, token: null, isLoggedOut: false });
       toast.success("Logged out Successfully");
     } catch (error) {
       set({ isLoggedOut: false });
@@ -62,7 +70,8 @@ export const useAuthStore = create((set) => ({
       set({ user: response.data.user, isAuthCheck: false });
     } catch (error) {
       console.error("Auth check failed:", error);
-      set({ isAuthCheck: false, user: null });
+      localStorage.removeItem('token'); // Remove invalid token
+      set({ isAuthCheck: false, user: null, token: null });
       //   toast.error(error.response.data.message || "An error occurred");
     }
   },

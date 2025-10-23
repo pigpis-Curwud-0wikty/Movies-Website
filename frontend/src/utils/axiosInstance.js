@@ -14,9 +14,16 @@ instance.interceptors.request.use(
     // Ensure withCredentials is always true for all requests
     config.withCredentials = true;
     
+    // Add Authorization header if token exists
+    const token = localStorage.getItem('token');
+    if (token && token !== 'undefined' && token !== 'null') {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
     // Debug logging
     console.log("Making request to:", config.url);
     console.log("With credentials:", config.withCredentials);
+    console.log("Authorization header:", config.headers.Authorization ? "Present" : "Not present");
     console.log("Request headers:", config.headers);
     
     return config;
@@ -40,7 +47,9 @@ instance.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized access - redirect to login or clear user state
       console.error("Unauthorized access - authentication required");
-      console.error("Cookies available:", document.cookie);
+      console.error("Token in localStorage:", localStorage.getItem('token'));
+      // Clear invalid token
+      localStorage.removeItem('token');
       // You might want to dispatch a logout action here
     }
     return Promise.reject(error);

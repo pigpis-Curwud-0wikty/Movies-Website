@@ -9,6 +9,7 @@ import {
   TV_CATEGORIES,
 } from "../utils/constants";
 import { useContentStore } from "../store/content";
+import ImageWithFallback from "../components/ImageWithFallback";
 
 const HomeScreen = () => {
   const { trendingContent, loading, error } = useGetTrendingContent();
@@ -55,10 +56,11 @@ const HomeScreen = () => {
       <div className="relative h-screen text-white">
         <Navbar />
 
-        <img
+        <ImageWithFallback
           src={ORIGINAL_IMG_BASE_URL + trendingContent?.backdrop_path}
           alt="Hero img"
           className="absolute top-0 left-0 w-full h-full object-cover -z-50"
+          fallbackSrc="https://via.placeholder.com/1920x1080/000000/FFFFFF?text=No+Image"
         />
 
         <div

@@ -4,7 +4,13 @@ const { ENV_VARS } = require("../config/envVars.js");
 
 const protectRoute = async (req, res, next) => {
   try {
-    const token = req.cookies["jwt-netflix"];
+    // Try to get token from Authorization header first
+    let token = req.headers.authorization?.replace('Bearer ', '');
+    
+    // If no token in header, try to get from cookie
+    if (!token) {
+      token = req.cookies["jwt-netflix"];
+    }
 
     if (!token) {
       return res
