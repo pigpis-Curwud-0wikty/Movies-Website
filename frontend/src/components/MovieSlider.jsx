@@ -18,8 +18,15 @@ const MovieSlider = ({ category }) => {
 
 	useEffect(() => {
 		const getContent = async () => {
-			const res = await axios.get(`/api/v1/${contentType}/${category}`);
-			setContent(res.data.content);
+			try {
+				const res = await axios.get(`/api/v1/${contentType}/${category}`, {
+					withCredentials: true,
+				});
+				setContent(res.data.content);
+			} catch (error) {
+				console.error(`Error fetching ${category} ${contentType}:`, error);
+				// Handle error gracefully - you might want to show an error message
+			}
 		};
 
 		getContent();

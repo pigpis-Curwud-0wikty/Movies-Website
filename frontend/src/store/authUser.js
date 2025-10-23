@@ -24,12 +24,18 @@ export const useAuthStore = create((set) => ({
   login: async (credentials) => {
     set({ isLoggedIn: true });
     try {
+      console.log("Attempting login with credentials:", credentials);
       const response = await axios.post("/api/v1/auth/login", credentials, {
         withCredentials: true, // 👈 أضفها هنا
       });
+      console.log("Login successful, response:", response.data);
+      console.log("Response headers:", response.headers);
+      console.log("Cookies after login:", document.cookie);
       set({ user: response.data.user, isLoggedIn: false });
       toast.success("User Logged In");
     } catch (error) {
+      console.error("Login failed:", error);
+      console.error("Error response:", error.response?.data);
       set({ user: null, isLoggedIn: false });
       toast.error(error.response?.data?.message || "Logged In Failed");
     }
@@ -50,9 +56,12 @@ export const useAuthStore = create((set) => ({
   authcheck: async () => {
     set({ isAuthCheck: true });
     try {
-      const response = await axios.get("/api/v1/auth/authcheck");
+      const response = await axios.get("/api/v1/auth/authcheck", {
+        withCredentials: true,
+      });
       set({ user: response.data.user, isAuthCheck: false });
     } catch (error) {
+      console.error("Auth check failed:", error);
       set({ isAuthCheck: false, user: null });
       //   toast.error(error.response.data.message || "An error occurred");
     }
