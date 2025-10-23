@@ -30,7 +30,7 @@ app.use(
     origin: [ 
       "http://localhost:5174",
       "http://localhost:5173",
-      "https://movies-website-eosin.vercel.app/"
+      "https://movies-website-eosin.vercel.app" // the link of the frontend deployed app on vercel
     ],
     credentials: true, // يسمح بإرسال الكوكيز والتوكين
   })
