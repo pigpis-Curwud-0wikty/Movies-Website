@@ -27,13 +27,10 @@ try {
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173", 
-      "http://localhost:3000", 
+    origin: [ 
       "http://localhost:5174",
-      "https://netflix-clone-frontend.vercel.app", // Add your frontend production URL here
-      "https://netflix-clone.vercel.app", // Alternative frontend URL
-      "https://movies-website-frontend.up.railway.app" // If you deploy frontend on Railway
+      "http://localhost:5173",
+      "https://movies-website-eosin.vercel.app/"
     ],
     credentials: true, // يسمح بإرسال الكوكيز والتوكين
   })
